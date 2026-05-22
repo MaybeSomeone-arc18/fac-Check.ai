@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>FacCheckAI - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              background: "#030407",
+              surface: "rgba(10, 11, 16, 0.6)",
+              "surface-highlight": "rgba(255, 255, 255, 0.03)",
+              primary: "#00daf3",
+              "primary-glow": "rgba(0, 218, 243, 0.4)",
+              secondary: "#8b5cf6", // Vibrant purple
+              "on-surface": "#f1f5f9",
+              "on-surface-variant": "#94a3b8",
+              error: "#ff453a",
+              "error-glow": "rgba(255, 69, 58, 0.3)"
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"]
+            },
+            animation: {
+              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+        body {
+            background-color: #030407;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.12) 0%, transparent 35%),
+                radial-gradient(circle at 85% 30%, rgba(0, 218, 243, 0.12) 0%, transparent 35%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+            background-attachment: fixed;
+            color: #f1f5f9;
+        }
+
+        .glass-panel {
+            background: rgba(13, 14, 21, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .glass-panel:hover {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255,255,255,0.02);
+        }
+
+        .glass-nav-item {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .glass-nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(0, 218, 243, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glass-nav-item:hover::before, .glass-nav-item.active::before {
+            opacity: 1;
+        }
+
+        .glass-nav-item.active {
+            border-left-color: #00daf3;
+            color: #00daf3;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #00daf3 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 15px rgba(0, 218, 243, 0.6);
+        }
+
+        .glow-chart-line {
+            filter: drop-shadow(0 0 8px rgba(0, 218, 243, 0.6));
+        }
+        
+        .glow-chart-line-warn {
+            filter: drop-shadow(0 0 8px rgba(255, 170, 0, 0.6));
+        }
+        
+        .glow-chart-line-err {
+            filter: drop-shadow(0 0 8px rgba(255, 69, 58, 0.6));
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body class="font-sans antialiased overflow-x-hidden min-h-screen flex selection:bg-primary selection:text-background">
+
+<!-- Premium Glass Sidebar -->
+<nav class="hidden md:flex w-[260px] h-screen fixed left-0 top-0 border-r border-white/10 bg-[#06080c]/80 backdrop-blur-2xl flex-col z-50 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+    <!-- Brand -->
+    <div class="px-6 py-8 border-b border-white/5 relative">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary"></div>
+        <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[28px] drop-shadow-[0_0_10px_rgba(0,218,243,0.8)]">memory</span>
+            <span class="text-gradient">FacCheckAI</span>
+        </h1>
+        <p class="text-xs text-on-surface-variant font-mono mt-2 tracking-widest uppercase">Global Operations</p>
+        
+        <button class="mt-6 w-full flex items-center justify-between px-3 py-2 border border-white/10 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 group">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-primary to-secondary p-[1px]">
+                    <img alt="Device" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9puVsSYy7IKrxUL6tyekw5xbmFGU1fSQ0ErtTOo9Kk0rE8IL0vEHIIpkzkY9gIy7tR1AGdlAiPe44WMT1WkLRD4ZdGf7IPQf8xRtoPtpf7I6lu-VO6HuFOtOFC4cRYdzpT3Reo_7NbFBXmO08QcPSSd44TFMZAVbnKLHkASmOK0vTx7en7cTxFSPCeBbcrzb9lEEU0VTdeA7P-4L_z4x8DG4x7fujGJaH2ypyVxlERRCXw6Ymd_rognp-KjMZUr116g0HiFVztS9a"/>
+                </div>
+                <span class="text-xs font-semibold tracking-wider text-on-surface group-hover:text-primary transition-colors">ALL FLEETS</span>
+            </div>
+            <span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">unfold_more</span>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <div class="flex-1 py-6 flex flex-col gap-1 overflow-y-auto">
+        <a class="glass-nav-item active border-l-4 px-6 py-3.5 flex items-center gap-4 text-sm font-medium tracking-wide" href="index.html">
+            <span class="material-symbols-outlined text-[20px]">dashboard</span>
+            Dashboard
+        </a>
+        <a class="glass-nav-item border-l-4 border-transparent text-on-surface-variant hover:text-on-surface px-6 py-3.5 flex items-center gap-4 text-sm font-medium tracking-wide" href="machine-detail.html">
+            <span class="material-symbols-outlined text-[20px]">precision_manufacturing</span>
+            Machine Detail
+        </a>
+        <a class="glass-nav-item border-l-4 border-transparent text-on-surface-variant hover:text-on-surface px-6 py-3.5 flex items-center gap-4 text-sm font-medium tracking-wide" href="#">
+            <span class="material-symbols-outlined text-[20px]">notifications</span>
+            Alerts
+            <span class="ml-auto bg-error/20 text-error border border-error/30 text-[10px] px-2 py-0.5 rounded-full shadow-[0_0_8px_rgba(255,69,58,0.3)] animate-pulse">2</span>
+        </a>
+        <a class="glass-nav-item border-l-4 border-transparent text-on-surface-variant hover:text-on-surface px-6 py-3.5 flex items-center gap-4 text-sm font-medium tracking-wide" href="analytics.html">
+            <span class="material-symbols-outlined text-[20px]">analytics</span>
+            Analytics
+        </a>
+    </div>
+
+    <!-- Footer Settings -->
+    <div class="p-6 border-t border-white/5 flex flex-col gap-2">
+        <a class="flex items-center gap-4 text-on-surface-variant hover:text-primary transition-colors text-sm font-medium tracking-wide group" href="#">
+            <span class="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform duration-500">settings</span>
+            Settings
+        </a>
+        <a class="flex items-center gap-4 text-on-surface-variant hover:text-primary transition-colors text-sm font-medium tracking-wide mt-2 group" href="#">
+            <span class="material-symbols-outlined text-[20px] group-hover:-translate-y-1 transition-transform duration-300">help</span>
+            Support
+        </a>
+    </div>
+</nav>
+
+<!-- Main Area -->
+<div class="flex-1 md:ml-[260px] flex flex-col min-h-screen relative z-10">
+    <!-- Top Nav -->
+    <header class="h-20 w-full sticky top-0 z-40 bg-[#06080c]/60 backdrop-blur-xl border-b border-white/5 flex justify-between items-center px-8 shadow-sm">
+        <div class="flex items-center gap-4">
+            <div class="px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 flex items-center gap-2 shadow-[0_0_15px_rgba(0,218,243,0.15)]">
+                <span class="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,218,243,0.8)]"></span>
+                <span class="text-xs font-mono text-primary font-semibold tracking-wider">SYSTEM NOMINAL</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6">
+            <div class="relative hidden lg:flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2 w-72 focus-within:border-primary/50 focus-within:bg-white/10 focus-within:shadow-[0_0_20px_rgba(0,218,243,0.1)] transition-all duration-300">
+                <span class="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+                <input class="bg-transparent border-none text-sm text-on-surface focus:ring-0 w-full placeholder:text-on-surface-variant/50 ml-2" placeholder="Search systems, alerts..." type="text"/>
+            </div>
+            <button class="text-on-surface-variant hover:text-primary transition-colors relative hover:scale-110 duration-300">
+                <span class="material-symbols-outlined">notifications</span>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full shadow-[0_0_8px_rgba(255,69,58,0.8)]"></span>
+            </button>
+            <div class="w-9 h-9 rounded-full border border-primary/40 p-[2px] bg-gradient-to-tr from-primary to-secondary hover:shadow-[0_0_15px_rgba(0,218,243,0.4)] transition-all duration-300 cursor-pointer">
+                <img alt="User" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrHZhw8Wa1JI1i1o9V7jfRvei4qKKvoAB734L1CwTP8aiGUNny1tGsQGhrcRHJtoPPwVuUhdWkbWOobA7Lq98Yd3Oax-6TeqaeCAnT85_Git_6JcGCWXrEhEU3HSHsAJb23nmLppUqAcjoXgJ7gb9xJq-v-Z5hsTDMgKTzjDfzlwIVp5gN8s0nouinIAA3sj_Tm0KmE0P_W_4PJKxO1zAywTJoQWB8Ik92HzdCUwKwaTLUQUo6qBgLAOv135aE4c2JxmZ_0oRkX0IU"/>
+            </div>
+        </div>
+    </header>
+
+    <!-- Canvas -->
+    <main class="flex-1 p-6 lg:p-8 xl:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
+        <!-- Glow Orbs in background -->
+        <div class="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none animate-pulse-slow"></div>
+        <div class="absolute bottom-20 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-[100px] pointer-events-none animate-pulse-slow" style="animation-delay: 1.5s;"></div>
+
+        <!-- Left Column -->
+        <div class="lg:col-span-8 xl:col-span-9 flex flex-col gap-8 animate-fade-in stagger-1">
+            <!-- Hero Telemetry -->
+            <section class="glass-panel rounded-2xl p-8 relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+                
+                <div class="flex items-center justify-between mb-8 relative z-10">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-on-surface">Fleet Intelligence Overview</h2>
+                        <p class="text-sm text-on-surface-variant mt-1">Real-time aggregated predictive models</p>
+                    </div>
+                    <span class="px-3 py-1 bg-white/5 border border-white/10 rounded text-xs font-mono text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[14px] animate-spin" style="animation-duration: 3s;">sync</span> LIVE STREAMING
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
+                    <!-- Metric 1 -->
+                    <div class="p-5 rounded-xl bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10 transition-all duration-300 group">
+                        <h3 class="text-xs font-mono text-on-surface-variant tracking-wider uppercase mb-2">Fleet Uptime</h3>
+                        <div class="text-3xl font-mono font-semibold text-on-surface group-hover:text-primary group-hover:glow-text transition-all duration-300">99.8<span class="text-lg text-on-surface-variant">%</span></div>
+                        <div class="text-xs font-medium text-primary mt-3 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">trending_up</span> +0.2% variance
+                        </div>
+                    </div>
+                    <!-- Metric 2 -->
+                    <div class="p-5 rounded-xl bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10 transition-all duration-300 group">
+                        <h3 class="text-xs font-mono text-on-surface-variant tracking-wider uppercase mb-2">Throughput</h3>
+                        <div class="text-3xl font-mono font-semibold text-on-surface group-hover:text-primary group-hover:glow-text transition-all duration-300">14.2<span class="text-lg text-on-surface-variant">k</span></div>
+                        <div class="text-xs text-on-surface-variant mt-3 font-mono">units/hr avg</div>
+                    </div>
+                    <!-- Metric 3 -->
+                    <div class="p-5 rounded-xl bg-white/5 border border-white/10 hover:border-primary/40 hover:bg-white/10 transition-all duration-300 group">
+                        <h3 class="text-xs font-mono text-on-surface-variant tracking-wider uppercase mb-2">Active AI Nodes</h3>
+                        <div class="text-3xl font-mono font-semibold text-on-surface group-hover:text-primary group-hover:glow-text transition-all duration-300">42<span class="text-lg text-on-surface-variant">/44</span></div>
+                        <div class="text-xs text-on-surface-variant mt-3 font-mono">2 maintenance</div>
+                    </div>
+                    <!-- Metric 4 (Critical) -->
+                    <div class="p-5 rounded-xl bg-error/10 border border-error/30 hover:shadow-[0_0_20px_rgba(255,69,58,0.2)] hover:border-error/60 hover:bg-error/20 transition-all duration-300 group">
+                        <h3 class="text-xs font-mono text-error tracking-wider uppercase mb-2">Critical Anomalies</h3>
+                        <div class="text-3xl font-mono font-semibold text-error group-hover:scale-110 origin-left transition-transform duration-300">2</div>
+                        <div class="text-xs font-bold text-error mt-3 flex items-center gap-1 animate-pulse">
+                            <span class="material-symbols-outlined text-[14px]">warning</span> ACTION REQ.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Machine Health Grid -->
+            <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Line A -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col gap-4 group cursor-pointer relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                    <div class="flex justify-between items-start z-10">
+                        <div>
+                            <h3 class="font-bold text-on-surface group-hover:text-primary transition-colors">Line A Assembler</h3>
+                            <p class="font-mono text-on-surface-variant text-[11px] mt-1 tracking-wider uppercase">ID: LA-01</p>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-1 rounded bg-primary/20 text-primary border border-primary/40 tracking-wider shadow-[0_0_10px_rgba(0,218,243,0.2)]">NOMINAL</span>
+                    </div>
+                    
+                    <div class="h-16 relative border-b border-l border-white/10 flex items-end mt-2 z-10 group-hover:border-primary/30 transition-colors">
+                        <div class="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-50"></div>
+                        <svg class="w-full h-full overflow-visible preserve-aspect-ratio-none glow-chart-line" viewbox="0 0 100 40">
+                            <path d="M0,30 L10,25 L20,28 L30,15 L40,20 L50,10 L60,18 L70,5 L80,12 L90,8 L100,2" fill="none" stroke="#00daf3" stroke-width="2.5" vector-effect="non-scaling-stroke"></path>
+                        </svg>
+                    </div>
+                    
+                    <div class="flex justify-between items-end mt-2 z-10">
+                        <div>
+                            <span class="text-[10px] font-mono text-on-surface-variant block mb-1 uppercase tracking-wider">Core Temp</span>
+                            <span class="font-mono text-on-surface font-semibold text-lg">42.5°C</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-mono text-on-surface-variant block mb-1 uppercase tracking-wider">Vibration</span>
+                            <span class="font-mono text-on-surface font-semibold text-lg">0.02g</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line B -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col gap-4 group cursor-pointer relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-b from-[#ffaa00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                    <div class="flex justify-between items-start z-10">
+                        <div>
+                            <h3 class="font-bold text-on-surface group-hover:text-[#ffaa00] transition-colors">Line B Stamping</h3>
+                            <p class="font-mono text-on-surface-variant text-[11px] mt-1 tracking-wider uppercase">ID: LB-02</p>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-1 rounded bg-[#ffaa00]/20 text-[#ffaa00] border border-[#ffaa00]/40 tracking-wider shadow-[0_0_10px_rgba(255,170,0,0.2)]">WARNING</span>
+                    </div>
+                    
+                    <div class="h-16 relative border-b border-l border-white/10 flex items-end mt-2 z-10 group-hover:border-[#ffaa00]/30 transition-colors">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#ffaa00]/10 to-transparent opacity-50"></div>
+                        <svg class="w-full h-full overflow-visible preserve-aspect-ratio-none glow-chart-line-warn" viewbox="0 0 100 40">
+                            <path d="M0,20 L10,22 L20,18 L30,25 L40,15 L50,30 L60,20 L70,35 L80,25 L90,38 L100,30" fill="none" stroke="#ffaa00" stroke-width="2.5" vector-effect="non-scaling-stroke"></path>
+                        </svg>
+                    </div>
+                    
+                    <div class="flex justify-between items-end mt-2 z-10">
+                        <div>
+                            <span class="text-[10px] font-mono text-on-surface-variant block mb-1 uppercase tracking-wider">Pressure</span>
+                            <span class="font-mono text-[#ffaa00] font-semibold text-lg">112 PSI</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-mono text-on-surface-variant block mb-1 uppercase tracking-wider">Cycle Time</span>
+                            <span class="font-mono text-on-surface font-semibold text-lg">2.4s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line C -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col gap-4 group cursor-pointer relative overflow-hidden border-error/30 shadow-[0_0_15px_rgba(255,69,58,0.1)]">
+                    <div class="absolute inset-0 bg-gradient-to-b from-error/10 to-transparent opacity-100 pointer-events-none"></div>
+                    <div class="flex justify-between items-start z-10">
+                        <div>
+                            <h3 class="font-bold text-error">Line C Welding</h3>
+                            <p class="font-mono text-error/70 text-[11px] mt-1 tracking-wider uppercase">ID: LC-03</p>
+                        </div>
+                        <span class="text-[10px] font-bold px-2 py-1 rounded bg-error/30 text-white border border-error tracking-wider shadow-[0_0_15px_rgba(255,69,58,0.5)] animate-pulse">CRITICAL</span>
+                    </div>
+                    
+                    <div class="h-16 relative border-b border-l border-error/30 flex items-end mt-2 z-10">
+                        <div class="absolute inset-0 bg-gradient-to-t from-error/20 to-transparent opacity-80"></div>
+                        <svg class="w-full h-full overflow-visible preserve-aspect-ratio-none glow-chart-line-err" viewbox="0 0 100 40">
+                            <path d="M0,35 L10,35 L20,35 L30,35 L40,5 L50,35 L60,35 L70,35 L80,35 L90,2 L100,35" fill="none" stroke="#ff453a" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+                        </svg>
+                    </div>
+                    
+                    <div class="flex justify-between items-end mt-2 z-10">
+                        <div>
+                            <span class="text-[10px] font-mono text-error/80 block mb-1 uppercase tracking-wider">Voltage</span>
+                            <span class="font-mono text-error font-bold text-lg">ERR_DROP</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-mono text-error/80 block mb-1 uppercase tracking-wider">Temp</span>
+                            <span class="font-mono text-error font-bold text-lg">85.0°C</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column (Inspector/Alerts Sidebar) -->
+        <div class="lg:col-span-4 xl:col-span-3 flex flex-col gap-6 animate-fade-in stagger-2 h-full">
+            <section class="glass-panel rounded-2xl p-6 flex-1 flex flex-col shadow-[inset_0_0_20px_rgba(255,255,255,0.02)]">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                    <h2 class="text-lg font-semibold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary">history</span>
+                        Event Log
+                    </h2>
+                    <button class="text-[10px] font-mono font-bold uppercase tracking-wider text-primary hover:text-white transition-colors bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
+                        View All
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1 relative">
+                    <!-- Alert Item (Critical) -->
+                    <div class="p-4 rounded-xl bg-error/10 border border-error/20 hover:bg-error/20 transition-colors group cursor-pointer relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-error shadow-[0_0_10px_#ff453a]"></div>
+                        <div class="flex justify-between items-start mb-2 pl-2">
+                            <span class="text-[10px] font-mono font-bold tracking-wider text-error">CRITICAL</span>
+                            <span class="text-[10px] font-mono text-on-surface-variant">10:42:01</span>
+                        </div>
+                        <p class="text-sm text-on-surface leading-relaxed pl-2">Voltage drop detected on Welding Arm 3. AI Auto-shutdown initiated.</p>
+                        <div class="mt-3 pt-3 border-t border-error/20 pl-2">
+                            <span class="text-[10px] font-mono text-error/80 bg-error/20 px-2 py-1 rounded">TAG: LC-03</span>
+                        </div>
+                    </div>
+
+                    <!-- Alert Item (Warning) -->
+                    <div class="p-4 rounded-xl bg-[#ffaa00]/10 border border-[#ffaa00]/20 hover:bg-[#ffaa00]/20 transition-colors group cursor-pointer relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#ffaa00]"></div>
+                        <div class="flex justify-between items-start mb-2 pl-2">
+                            <span class="text-[10px] font-mono font-bold tracking-wider text-[#ffaa00]">WARNING</span>
+                            <span class="text-[10px] font-mono text-on-surface-variant">10:15:33</span>
+                        </div>
+                        <p class="text-sm text-on-surface leading-relaxed pl-2">Hydraulic pressure fluctuation above nominal AI variance threshold.</p>
+                        <div class="mt-3 pt-3 border-t border-[#ffaa00]/20 pl-2">
+                            <span class="text-[10px] font-mono text-[#ffaa00]/80 bg-[#ffaa00]/20 px-2 py-1 rounded">TAG: LB-02</span>
+                        </div>
+                    </div>
+
+                    <!-- Log Item (Info) -->
+                    <div class="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group cursor-pointer relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-white/20"></div>
+                        <div class="flex justify-between items-start mb-2 pl-2">
+                            <span class="text-[10px] font-mono font-bold tracking-wider text-on-surface-variant">INFO</span>
+                            <span class="text-[10px] font-mono text-on-surface-variant">09:00:00</span>
+                        </div>
+                        <p class="text-sm text-on-surface/80 leading-relaxed pl-2">Routine predictive maintenance scan completed successfully.</p>
+                        <div class="mt-3 pt-3 border-t border-white/10 pl-2">
+                            <span class="text-[10px] font-mono text-on-surface-variant bg-white/5 px-2 py-1 rounded">TAG: LA-01</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+</body>
+</html>
