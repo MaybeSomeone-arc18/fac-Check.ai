@@ -11,8 +11,8 @@ The system features a real-time WebSocket architecture that feeds live telemetry
 ![Dashboard Preview](docs/dashboard-preview.png)
 
 ## 🚀 Live Demo
-- **Frontend Dashboard:** [faccheck-ai.vercel.app](#) *(Placeholder)*
-- **Backend API:** [api.faccheck-ai.com](#) *(Placeholder)*
+- **Frontend Dashboard:** [fac-check-ai-five.vercel.app](https://fac-check-ai-five.vercel.app/dashboard)
+- **Backend API:** [fac-check-ai.onrender.com](https://fac-check-ai.onrender.com)
 
 ## ⚠️ Problem Statement
 Unplanned downtime in manufacturing and industrial sectors costs millions of dollars annually. Traditional maintenance is purely reactive (fixing things after they break) or rigidly preventative (replacing parts on a strict schedule, regardless of actual wear). There is a critical need to transition to **predictive maintenance**—fixing machines exactly when they are about to fail.
