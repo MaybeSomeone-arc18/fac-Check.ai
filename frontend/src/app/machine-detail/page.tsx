@@ -4,17 +4,24 @@ import { useEffect, useState, Suspense } from 'react';
 import { socket } from '@/lib/socket';
 import { useSearchParams, useRouter } from 'next/navigation';
 import MachineModel from '@/components/MachineModel';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useFleet } from '@/lib/fleetStore';
 
 type MachineTelemetry = {
-  coreTemp: string;
-  vibration: string;
-  sysLoad: number;
-  powerDraw: string;
-  vibrationHistory: number[];
-  riskPercentage: string;
+  id?: string;
+  type?: string;
+  coreTemp?: string;
+  vibration?: string;
+  sysLoad?: number;
+  powerDraw?: string;
+  vibrationHistory?: number[];
+  riskPercentage?: string;
   risk_level?: string;
+  metrics?: {
+    metricA?: { label: string; value: string; unit: string; };
+    metricB?: { label: string; value: string; unit: string; };
+    metricC?: { label: string; value: string; unit: string; };
+  };
 };
 
 
@@ -27,7 +34,9 @@ type Alert = {
   machineId?: string;
 };
 
-const containerVariants = {
+
+
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -35,7 +44,7 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
   show: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }
 };
@@ -374,7 +383,7 @@ function MachineDetailContent() {
             </div>
             <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider block mb-3 z-10 relative">Power Draw</span>
             <div className="flex items-baseline gap-1 z-10 relative">
-              <motion.span key={telemetry.metrics?.metricA?.value} initial={{ opacity: 0.5, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-on-surface group-hover:text-primary transition-colors">{telemetry.metrics ? (parseFloat(telemetry.metrics.metricA.value) * 0.4).toFixed(1) : '--'}</motion.span>
+              <motion.span key={telemetry.metrics?.metricA?.value} initial={{ opacity: 0.5, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-3xl font-bold text-on-surface group-hover:text-primary transition-colors">{telemetry.metrics?.metricA?.value ? (parseFloat(telemetry.metrics.metricA.value) * 0.4).toFixed(1) : '--'}</motion.span>
               <span className="text-sm font-mono text-on-surface-variant">kW</span>
             </div>
             <div className="h-6 mt-4 border-t border-white/10 relative z-10 flex items-end">

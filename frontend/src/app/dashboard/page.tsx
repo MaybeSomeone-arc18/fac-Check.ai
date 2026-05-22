@@ -25,21 +25,29 @@ type Machine = {
   name: string;
   location: string;
   status: string;
+  type?: string;
 };
 
 type MachineTelemetry = {
   id: string;
-  coreTemp: string;
-  vibration: string;
-  sysLoad: number;
-  powerDraw: string;
-  riskPercentage: string;
-  risk_level: string;
+  type?: string;
+  coreTemp?: string;
+  vibration?: string;
+  sysLoad?: number;
+  powerDraw?: string;
+  vibrationHistory?: number[];
+  riskPercentage?: string;
+  risk_level?: string;
+  metrics?: {
+    metricA?: { label: string; value: string; unit: string; };
+    metricB?: { label: string; value: string; unit: string; };
+    metricC?: { label: string; value: string; unit: string; };
+  };
 };
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -47,7 +55,7 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
 };

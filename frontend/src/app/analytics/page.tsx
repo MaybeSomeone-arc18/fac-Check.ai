@@ -8,8 +8,19 @@ import { useFleet } from '@/lib/fleetStore';
 
 type MachineTelemetry = {
   id: string;
-  riskPercentage: string;
-  risk_level: string;
+  type?: string;
+  coreTemp?: string;
+  vibration?: string;
+  sysLoad?: number;
+  powerDraw?: string;
+  vibrationHistory?: number[];
+  riskPercentage?: string;
+  risk_level?: string;
+  metrics?: {
+    metricA?: { label: string; value: string; unit: string; };
+    metricB?: { label: string; value: string; unit: string; };
+    metricC?: { label: string; value: string; unit: string; };
+  };
 };
 
 type Machine = {
