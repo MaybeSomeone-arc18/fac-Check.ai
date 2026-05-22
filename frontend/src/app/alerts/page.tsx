@@ -34,12 +34,12 @@ export default function AlertsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/machines')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/machines`)
       .then(res => res.json())
       .then(data => setMachines(data))
       .catch(err => console.error("Failed to load machines", err));
 
-    fetch('http://localhost:3001/api/alerts')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/alerts`)
       .then(res => res.json())
       .then(data => {
         setAlerts(data);

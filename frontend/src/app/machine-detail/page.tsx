@@ -71,7 +71,7 @@ function MachineDetailContent() {
 
   // Fetch available machines
   useEffect(() => {
-    fetch('http://localhost:3001/api/machines')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/machines`)
       .then(res => res.json())
       .then(data => {
         let filtered = data;
@@ -97,7 +97,7 @@ function MachineDetailContent() {
     // Reset buffers when machine changes
     setHistoryBuffers({ metricA: [], metricB: [], metricC: [], vibration: [] });
 
-    fetch(`http://localhost:3001/api/machines/${machineId}/history`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/machines/${machineId}/history`)
       .then(res => res.json())
       .then(history => {
         setTelemetry(prev => ({

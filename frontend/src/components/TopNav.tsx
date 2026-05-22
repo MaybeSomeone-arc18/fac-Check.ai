@@ -23,7 +23,7 @@ export default function TopNav() {
 
   useEffect(() => {
     // Fetch initial alerts
-    fetch('http://localhost:3001/api/alerts')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/alerts`)
       .then(res => res.json())
       .then(data => {
         setAlerts(data);

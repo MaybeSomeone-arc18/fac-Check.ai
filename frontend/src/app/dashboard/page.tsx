@@ -70,13 +70,13 @@ export default function Dashboard() {
     socket.connect();
 
     // Fetch initial alerts
-    fetch('http://localhost:3001/api/alerts')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/alerts`)
       .then(res => res.json())
       .then(data => setAlerts(data))
       .catch(err => console.error("Failed to load initial alerts", err));
 
     // Fetch all machines
-    fetch('http://localhost:3001/api/machines')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/machines`)
       .then(res => res.json())
       .then((data: Machine[]) => {
         setAllMachines(data);

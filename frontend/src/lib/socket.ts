@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 
-const URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+const URL = process.env.NEXT_PUBLIC_SOCKET_URL;
 
-export const socket = io(URL, {
+export const socket = io(URL as string, {
   autoConnect: true,
   reconnection: true,
   reconnectionAttempts: Infinity,

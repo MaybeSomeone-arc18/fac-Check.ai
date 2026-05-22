@@ -48,7 +48,7 @@ export default function Analytics() {
   });
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/machines')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/machines`)
       .then(res => res.json())
       .then(data => {
         setMachines(data);

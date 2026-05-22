@@ -8,7 +8,12 @@ const aiService = require('./services/aiService');
 
 const PORT = process.env.PORT || 3001;
 const CSV_PATH = path.join(__dirname, '../../predictive_maintenance_dataset.csv');
-const MONGO_URI = 'mongodb+srv://admin:admin123@sans.w2sndm7.mongodb.net/?appName=sans';
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error("FATAL ERROR: MONGO_URI environment variable is not defined.");
+  process.exit(1);
+}
 
 // Create HTTP server
 const server = http.createServer(app);
