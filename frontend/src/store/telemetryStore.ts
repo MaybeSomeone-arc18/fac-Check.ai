@@ -64,6 +64,9 @@ interface TelemetryState {
   
   isInitialized: boolean;
   setIsInitialized: (status: boolean) => void;
+  
+  apiError: boolean;
+  setApiError: (status: boolean) => void;
 }
 
 export const useTelemetryStore = create<TelemetryState>((set) => ({
@@ -109,4 +112,7 @@ export const useTelemetryStore = create<TelemetryState>((set) => ({
   
   isInitialized: false,
   setIsInitialized: (status) => set({ isInitialized: status }),
+  
+  apiError: false,
+  setApiError: (status) => set({ apiError: status }),
 }));

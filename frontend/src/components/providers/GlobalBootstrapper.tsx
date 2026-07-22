@@ -8,6 +8,7 @@ export function GlobalBootstrapper({ children }: { children: React.ReactNode }) 
   const setMachines = useTelemetryStore((state) => state.setMachines);
   const setAlerts = useTelemetryStore((state) => state.setAlerts);
   const setIsInitialized = useTelemetryStore((state) => state.setIsInitialized);
+  const setApiError = useTelemetryStore((state) => state.setApiError);
   const hasInitialized = useRef(false);
 
   useEffect(() => {
@@ -32,8 +33,10 @@ export function GlobalBootstrapper({ children }: { children: React.ReactNode }) 
 
       if (machinesResult.status === 'fulfilled') {
         setMachines(machinesResult.value);
+        setApiError(false);
       } else {
         console.error('[Bootstrap] Failed to load machines:', machinesResult.reason);
+        setApiError(true);
       }
 
       if (alertsResult.status === 'fulfilled') {
@@ -47,7 +50,7 @@ export function GlobalBootstrapper({ children }: { children: React.ReactNode }) 
     };
 
     initializeApp();
-  }, [setMachines, setAlerts, setIsInitialized]);
+  }, [setMachines, setAlerts, setIsInitialized, setApiError]);
 
   return <>{children}</>;
 }

@@ -54,6 +54,7 @@ function MachineDetailContent() {
   const machines = useTelemetryStore((state) => state.machines);
   const alerts = useTelemetryStore((state) => state.alerts);
   const isInitialized = useTelemetryStore((state) => state.isInitialized);
+  const apiError = useTelemetryStore((state) => state.apiError);
   const activeTelemetry = useTelemetryStore((state) => state.telemetry[activeMachineId]);
   const [isShellOpen, setIsShellOpen] = useState(false);
   const [shellLines, setShellLines] = useState<string[]>([]);
@@ -84,6 +85,12 @@ function MachineDetailContent() {
     const initialize = () => {
       if (!isInitialized) return;
 
+      // If the API failed to load machines, stop loading and let the UI handle the apiError state
+      if (apiError) {
+        setIsLoadingInitial(false);
+        return;
+      }
+
       let targetId = urlId;
       if (!targetId) {
         if (machines.length > 0) {
@@ -92,10 +99,6 @@ function MachineDetailContent() {
           if (latestUrlId.current === urlId) {
             router.replace(`/machine-detail?id=${targetId}`);
           }
-        } else {
-          setIsError(true);
-          setIsLoadingInitial(false);
-          return;
         }
       } else if (!machines.find(m => m.id === targetId)) {
         setIsError(true);
@@ -105,14 +108,14 @@ function MachineDetailContent() {
 
       // Guard: only apply state if this URL is still the latest one
       if (latestUrlId.current === urlId) {
-        setActiveMachineId(targetId);
+        if (targetId) setActiveMachineId(targetId);
         setIsError(false);
         setIsLoadingInitial(false);
       }
     };
 
     initialize();
-  }, [urlId, machines, isInitialized, router]);
+  }, [urlId, machines, isInitialized, apiError, router]);
 
   // 2. Socket Lifecycle
   useEffect(() => {
@@ -221,11 +224,26 @@ function MachineDetailContent() {
     return <PageSkeleton />;
   }
 
-  if (isError || !activeMachineId) {
+  if (apiError) {
     return (
       <div className="flex-1 w-full flex flex-col items-center justify-center relative overflow-hidden pb-8 h-[80vh]">
         <div className="w-20 h-20 bg-critical/10 rounded-full flex items-center justify-center mb-6">
-          <span className="material-symbols-outlined text-4xl text-critical">link_off</span>
+          <span className="material-symbols-outlined text-4xl text-critical">cloud_off</span>
+        </div>
+        <h2 className="text-3xl font-sans font-bold text-on-surface mb-3 tracking-tight">API Connection Failed</h2>
+        <p className="text-on-surface-variant font-mono text-sm mb-8 text-center max-w-md">Could not retrieve the machine registry. Please ensure the backend is running and the API URL is correctly configured.</p>
+        <Link href="/dashboard">
+          <Button variant="primary" className="font-bold tracking-wider px-8 py-3 rounded-xl">Return to Dashboard</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  if (isError || !activeMachineId) {
+    return (
+      <div className="flex-1 w-full flex flex-col items-center justify-center relative overflow-hidden pb-8 h-[80vh]">
+        <div className="w-20 h-20 bg-warning/10 rounded-full flex items-center justify-center mb-6">
+          <span className="material-symbols-outlined text-4xl text-warning">link_off</span>
         </div>
         <h2 className="text-3xl font-sans font-bold text-on-surface mb-3 tracking-tight">Machine Not Found</h2>
         <p className="text-on-surface-variant font-mono text-sm mb-8 text-center max-w-md">The requested machine ID does not exist in the active fleet registry, or it has been decommissioned.</p>
