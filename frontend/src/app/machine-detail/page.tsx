@@ -459,7 +459,7 @@ function MachineDetailContent() {
                       contentStyle={{ backgroundColor: 'var(--color-surface-elevated)', borderRadius: '12px', border: '1px solid var(--color-border-subtle)', boxShadow: '0 8px 30px rgba(0,0,0,0.12)' }}
                       itemStyle={{ color: 'var(--color-on-surface)', fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 'bold' }}
                       cursor={{ stroke: 'var(--color-on-surface-variant)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                      formatter={(value: number) => [`${value.toFixed(2)} Hz`, 'Vibration']}
+                      formatter={(value: any) => [`${Number(value).toFixed(2)} Hz`, 'Vibration']}
                       labelFormatter={() => ''}
                     />
                     <Area 
