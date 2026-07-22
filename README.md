@@ -24,7 +24,7 @@
     <img src="https://img.shields.io/github/repo-size/MaybeSomeone-arc18/fac-Check.ai?style=flat-square" alt="Repo Size" />
   </p>
 
-  <h3>✨ Live Demo: <a href="https://fac-check-ai-five.vercel.app/dashboard">View Dashboard</a></h3>
+  
 </div>
 
 ---
@@ -37,7 +37,6 @@
 - [Overview](#-overview)
 - [Why FacCheck AI?](#-why-faccheck-ai)
 - [Features](#-features)
-- [Screenshots](#-screenshots)
 - [System Design & Architecture](#-system-design--architecture)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
@@ -89,18 +88,6 @@ Unplanned downtime in manufacturing and industrial sectors costs millions of dol
 
 ---
 
-## 📸 Screenshots
-
-<div align="center">
-  <img src="docs/dashboard-preview.png" alt="Dashboard Demo" width="800" />
-  <p><em>🎥 FacCheck AI Dashboard Preview</em></p>
-</div>
-
-| Dashboard | Machine Detail |
-|:---:|:---:|
-| <img src="docs/dashboard-preview.png" alt="Dashboard" width="400" /> | <img src="docs/dashboard-preview.png" alt="Machine Detail" width="400" /> |
-
----
 
 ## 📊 System Design & Architecture
 
@@ -320,12 +307,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
   <img src="https://komarev.com/ghpvc/?username=MaybeSomeone-arc18&label=Profile%20Views&color=0e75b6&style=flat" alt="Visitor Counter" />
   
   <br/><br/>
-  
-  <img src="https://github-readme-stats.vercel.app/api?username=MaybeSomeone-arc18&show_icons=true&theme=radium" alt="GitHub Stats" width="48%" />
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=MaybeSomeone-arc18&theme=radium" alt="GitHub Streak" width="48%" />
-  
-  <br/><br/>
-  
-  <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=MaybeSomeone-arc18&layout=compact&theme=radium" alt="Top Languages" width="50%" />
 
 </div>
