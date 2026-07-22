@@ -85,7 +85,7 @@ function MachineDetailContent() {
       if (!isInitialized) return;
 
       let targetId = urlId;
-      if (!targetId || !machines.find(m => m.id === targetId)) {
+      if (!targetId) {
         if (machines.length > 0) {
           targetId = machines[0].id;
           // Only redirect if this is still the latest URL context
@@ -97,6 +97,10 @@ function MachineDetailContent() {
           setIsLoadingInitial(false);
           return;
         }
+      } else if (!machines.find(m => m.id === targetId)) {
+        setIsError(true);
+        setIsLoadingInitial(false);
+        return;
       }
 
       // Guard: only apply state if this URL is still the latest one
