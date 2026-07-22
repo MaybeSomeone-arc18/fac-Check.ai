@@ -1,3 +1,4 @@
+require('dotenv').config();
 const http = require('http');
 const path = require('path');
 const mongoose = require('mongoose');

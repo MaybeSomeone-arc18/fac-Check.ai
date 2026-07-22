@@ -21,18 +21,29 @@ const initializeSocket = (server) => {
     activeConnections++;
     console.log(`Client connected: ${socket.id}. Total active: ${activeConnections}`);
 
+    socket.on('error', (err) => {
+      console.warn(`Socket error for ${socket.id}:`, err.message);
+    });
+
     socket.on('subscribe_machine', (machineId) => {
-      // Provide an alias resolution so 'CNC-042' targets our first loaded CSV device
+      if (!machineId || typeof machineId !== 'string') return;
+      const cleanId = machineId.replace(/[^\x20-\x7E]/g, '').trim();
+      if (!cleanId) return;
+
       const devices = csvLoader.getUniqueDevices();
-      const targetId = (machineId === 'CNC-042' && devices.length > 0) ? devices[0].id : machineId;
+      const targetId = (cleanId === 'CNC-042' && devices.length > 0) ? devices[0].id : cleanId;
       
       socket.join(targetId);
       console.log(`Socket ${socket.id} subscribed to room: ${targetId}`);
     });
 
     socket.on('unsubscribe_machine', (machineId) => {
+      if (!machineId || typeof machineId !== 'string') return;
+      const cleanId = machineId.replace(/[^\x20-\x7E]/g, '').trim();
+      if (!cleanId) return;
+
       const devices = csvLoader.getUniqueDevices();
-      const targetId = (machineId === 'CNC-042' && devices.length > 0) ? devices[0].id : machineId;
+      const targetId = (cleanId === 'CNC-042' && devices.length > 0) ? devices[0].id : cleanId;
       
       socket.leave(targetId);
       console.log(`Socket ${socket.id} unsubscribed from room: ${targetId}`);

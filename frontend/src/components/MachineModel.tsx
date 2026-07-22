@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Environment, Float, ContactShadows, Html, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
@@ -9,8 +9,8 @@ import * as THREE from 'three';
 function Loader() {
   return (
     <Html center>
-      <div className="flex flex-col items-center justify-center text-primary font-mono text-xs w-32 bg-[#0a101c]/95 backdrop-blur-md px-4 py-3 rounded-lg border border-primary/40 shadow-[0_0_20px_rgba(0,218,243,0.3)]">
-        <span className="material-symbols-outlined animate-spin mb-2 text-2xl drop-shadow-[0_0_8px_rgba(0,218,243,0.8)]">progress_activity</span>
+      <div className="flex flex-col items-center justify-center text-primary font-mono text-xs w-32 bg-surface-solid border border-border-strong px-4 py-3 rounded-lg shadow-lg">
+        <span className="material-symbols-outlined animate-spin mb-2 text-2xl">progress_activity</span>
         LOADING...
       </div>
     </Html>
@@ -23,48 +23,50 @@ function Model({ url, riskLevel }: { url: string; riskLevel: string }) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Auto-rotation is now handled by OrbitControls to keep the object static in world space.
-  // We only handle hover scaling here.
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (groupRef.current) {
       const targetScale = hovered ? 1.05 : 1;
       groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+    }
+    
+    if (riskLevel === 'CRITICAL') {
+      scene.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material.emissive) {
+          child.material.emissiveIntensity = 0.4 + Math.sin(clock.getElapsedTime() * 5) * 0.3;
+        }
+      });
     }
   });
 
   // Dynamic light color based on state
   const lightColor = useMemo(() => {
-    if (riskLevel === 'CRITICAL') return '#ff453a';
-    if (riskLevel === 'WARNING') return '#ffaa00';
-    return '#00daf3'; // STABLE uses primary color (cyan)
+    if (riskLevel === 'CRITICAL') return '#EF4444';
+    if (riskLevel === 'WARNING') return '#F59E0B';
+    return '#6366F1';
   }, [riskLevel]);
 
-  // Recursively apply glow/emissive based on risk level
-  useMemo(() => {
+  // Apply material properties as a side effect (not useMemo — useMemo must be pure)
+  useEffect(() => {
     scene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         if (!child.userData.originalMaterial) {
-          // Backup original materials
           child.userData.originalMaterial = child.material.clone();
         }
-        
-        // Enhance materials safely if they support PBR
+
         if (child.material.isMeshStandardMaterial || child.material.isMeshPhysicalMaterial) {
           child.material.metalness = 0.7;
           child.material.roughness = 0.3;
           child.material.envMapIntensity = 0.8;
         }
 
-        // Apply dynamic emissive glow
         if (riskLevel === 'CRITICAL') {
-          child.material.emissive = new THREE.Color('#ff453a');
-          child.material.emissiveIntensity = 0.4 + Math.sin(Date.now() * 0.005) * 0.3; // Strobe
+          child.material.emissive = new THREE.Color('#EF4444');
+          child.material.emissiveIntensity = 0.4;
         } else if (riskLevel === 'WARNING') {
-          child.material.emissive = new THREE.Color('#ffaa00');
+          child.material.emissive = new THREE.Color('#F59E0B');
           child.material.emissiveIntensity = 0.2;
         } else {
-          // Stable: Subtle primary glow
-          child.material.emissive = new THREE.Color('#00daf3');
+          child.material.emissive = new THREE.Color('#6366F1');
           child.material.emissiveIntensity = hovered ? 0.2 : 0.05;
         }
         child.material.needsUpdate = true;
@@ -72,7 +74,6 @@ function Model({ url, riskLevel }: { url: string; riskLevel: string }) {
     });
   }, [scene, riskLevel, hovered]);
 
-  // Calculate center and scale exactly ONCE per model load
   const { scale, center } = useMemo(() => {
     const measureScene = scene.clone();
     measureScene.scale.set(1, 1, 1);
@@ -86,7 +87,7 @@ function Model({ url, riskLevel }: { url: string; riskLevel: string }) {
     const maxDim = Math.max(size.x, size.y, size.z);
     
     return { 
-      scale: 2.5 / (maxDim || 1), // Slightly larger framing
+      scale: 2.5 / (maxDim || 1),
       center 
     };
   }, [scene, url]);
@@ -100,35 +101,30 @@ function Model({ url, riskLevel }: { url: string; riskLevel: string }) {
       <group scale={scale} position={[-center.x * scale, -center.y * scale, -center.z * scale]}>
         <primitive object={scene} />
       </group>
-      {/* Dynamic Aura Light centered on the object */}
       <pointLight position={[0, 0, 0]} color={lightColor} intensity={riskLevel === 'CRITICAL' ? 5 : 1} distance={6} />
     </group>
   );
 }
 
 export default function MachineModel({ machineType, riskLevel }: { machineType: string; riskLevel: string }) {
-  // Determine model URL
   const modelUrl = 
     machineType.toLowerCase().includes('conveyor') ? '/models/conveyor.glb' :
     machineType.toLowerCase().includes('robot') ? '/models/robot.glb' :
-    machineType.toLowerCase().includes('filling') ? '/models/conveyor.glb' : // Fallback
-    '/models/robot.glb'; // Fallback for Sealing
+    machineType.toLowerCase().includes('filling') ? '/models/conveyor.glb' : 
+    '/models/robot.glb';
 
   return (
-    <div className="w-full h-full min-h-[300px] relative rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing bg-transparent">
-      {/* The background should be transparent to show the glassmorphism panel behind it */}
+    <div className="w-full h-full min-h-[300px] relative rounded-xl overflow-hidden cursor-grab active:cursor-grabbing bg-transparent">
       <Canvas shadows camera={{ position: [4, 3, 5], fov: 40 }} gl={{ alpha: true, antialias: true }}>
         
-        {/* Soft, dramatic studio lighting */}
         <ambientLight intensity={0.3} />
         <spotLight position={[10, 10, 10]} angle={0.2} penumbra={1} intensity={1} castShadow shadow-bias={-0.0001} />
-        <spotLight position={[-10, 5, -10]} angle={0.2} penumbra={1} intensity={0.5} color="#00daf3" />
+        <spotLight position={[-10, 5, -10]} angle={0.2} penumbra={1} intensity={0.5} color="#6366F1" />
         
-        {/* Dynamic Risk Lighting from above */}
         <pointLight 
           position={[0, 3, 0]} 
           intensity={riskLevel === 'CRITICAL' ? 3 : 0} 
-          color="#ff453a" 
+          color="#EF4444" 
         />
 
         <React.Suspense fallback={<Loader />}>
@@ -136,7 +132,7 @@ export default function MachineModel({ machineType, riskLevel }: { machineType: 
             <Model url={modelUrl} riskLevel={riskLevel} />
           </Float>
           <Environment preset="city" />
-          <ContactShadows position={[0, -1.2, 0]} opacity={0.6} scale={10} blur={2.5} far={4} color={riskLevel === 'CRITICAL' ? '#ff453a' : '#00daf3'} />
+          <ContactShadows position={[0, -1.2, 0]} opacity={0.6} scale={10} blur={2.5} far={4} color={riskLevel === 'CRITICAL' ? '#EF4444' : '#6366F1'} />
         </React.Suspense>
 
         <OrbitControls 
@@ -150,9 +146,8 @@ export default function MachineModel({ machineType, riskLevel }: { machineType: 
         />
       </Canvas>
       
-      {/* Absolute overlay for Risk % text if needed */}
-      <div className="absolute bottom-4 left-0 w-full text-center pointer-events-none drop-shadow-md">
-        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-on-surface-variant bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+      <div className="absolute bottom-4 left-0 w-full text-center pointer-events-none">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-on-surface-variant bg-surface-solid px-3 py-1 rounded-full border border-border-strong shadow-lg">
           Interactive 3D Digital Twin
         </span>
       </div>

@@ -1,72 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { socket } from '@/lib/socket';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useFleet } from '@/lib/fleetStore';
-
-type Alert = {
-  id: number;
-  type: string;
-  time: string;
-  message: string;
-  tag: string;
-};
-
-type Machine = {
-  id: string;
-  type: string;
-};
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-};
+import { useTelemetryStore } from '@/store/telemetryStore';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import Link from 'next/link';
 
 export default function AlertsPage() {
-  const { fleet } = useFleet();
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [machines, setMachines] = useState<Machine[]>([]);
+  const fleet = useTelemetryStore((state) => state.fleet);
+  const alerts = useTelemetryStore((state) => state.alerts);
+  const machines = useTelemetryStore((state) => state.machines);
+  const isInitialized = useTelemetryStore((state) => state.isInitialized);
   const [filter, setFilter] = useState('ALL');
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/machines`)
-      .then(res => res.json())
-      .then(data => setMachines(data))
-      .catch(err => console.error("Failed to load machines", err));
-
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/alerts`)
-      .then(res => res.json())
-      .then(data => {
-        setAlerts(data);
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to load alerts", err);
-        setIsLoading(false);
-      });
-
-    socket.connect();
-    socket.on('new_alert', (alert: Alert) => {
-      setAlerts(prev => [alert, ...prev]);
-    });
-
-    return () => {
-      socket.off('new_alert');
-    };
-  }, []);
 
   const filteredAlerts = alerts.filter(a => {
-    // Check local filter (CRITICAL, WARNING, ALL)
     if (filter !== 'ALL' && a.type !== filter) return false;
     
-    // Check global fleet filter
     if (fleet === 'All Fleets') return true;
-    if (fleet === 'High Risk Machines') return true; // High risk includes all alerts since alerts imply risk
+    if (fleet === 'High Risk Machines') return true;
     
     const machine = machines.find(m => m.id === a.tag);
     if (!machine) return false;
@@ -79,130 +32,112 @@ export default function AlertsPage() {
     return true;
   });
 
-  const getAlertStyles = (type: string) => {
-    switch (type) {
-      case 'CRITICAL':
-        return {
-          bg: 'bg-error/10 border-error/40 hover:bg-error/20 glass-alert',
-          line: 'bg-error shadow-[0_0_15px_#ff453a]',
-          text: 'text-error',
-          icon: 'warning'
-        };
-      case 'WARNING':
-        return {
-          bg: 'bg-[#ffaa00]/10 border-[#ffaa00]/40 hover:bg-[#ffaa00]/20',
-          line: 'bg-[#ffaa00] shadow-[0_0_10px_#ffaa00]',
-          text: 'text-[#ffaa00]',
-          icon: 'notifications_active'
-        };
-      default:
-        return {
-          bg: 'bg-primary/10 border-primary/40 hover:bg-primary/20',
-          line: 'bg-primary shadow-[0_0_10px_#00daf3]',
-          text: 'text-primary',
-          icon: 'info'
-        };
-    }
-  };
+  if (!isInitialized) {
+    return (
+      <main className="flex-1 w-full flex flex-col gap-6 xl:gap-8 relative overflow-hidden pb-8 animate-pulse">
+        <div className="w-64 h-8 bg-surface-solid rounded-lg mb-8 mt-4"></div>
+        <div className="w-full h-12 bg-surface-solid rounded-xl mb-4"></div>
+        <div className="flex-1 min-h-[400px] bg-surface-solid rounded-3xl"></div>
+      </main>
+    );
+  }
 
   return (
-    <main className="flex-1 p-6 lg:p-8 xl:p-10 flex flex-col gap-6 relative overflow-hidden">
-      <div className="absolute top-20 right-1/4 w-[600px] h-[600px] bg-error/5 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
+    <main className="flex-1 w-full flex flex-col gap-6 xl:gap-8 relative overflow-hidden pb-8">
+      <div className="absolute top-20 right-1/4 w-[600px] h-[600px] bg-critical/5 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 z-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 z-10 px-2 md:px-0">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-gradient mb-1">Global Alert Center</h2>
-          <p className="text-sm font-mono text-on-surface-variant tracking-wider">Real-time anomaly detection and operational incidents.</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-on-surface mb-1">Global Alert Center</h2>
+          <p className="text-xs md:text-sm font-mono text-on-surface-variant tracking-wider">Real-time anomaly detection and operational incidents.</p>
         </div>
 
-        <div className="flex gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
+        <div className="flex gap-2 bg-surface-solid p-1 rounded-lg border border-border-strong w-full sm:w-auto overflow-x-auto custom-scrollbar justify-start sm:justify-end">
           <button 
             onClick={() => setFilter('ALL')}
-            className={`px-4 py-1.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${filter === 'ALL' ? 'bg-white/20 text-white shadow-md' : 'text-on-surface-variant hover:text-white'}`}
+            className={`px-4 py-1.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${filter === 'ALL' ? 'bg-primary/20 text-primary border border-primary/30 shadow-md' : 'text-on-surface-variant hover:text-on-surface'}`}
           >
             All
           </button>
           <button 
             onClick={() => setFilter('CRITICAL')}
-            className={`px-4 py-1.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${filter === 'CRITICAL' ? 'bg-error text-white shadow-[0_0_15px_rgba(255,69,58,0.5)]' : 'text-on-surface-variant hover:text-error'}`}
+            className={`px-4 py-1.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${filter === 'CRITICAL' ? 'bg-critical text-white shadow-[0_0_15px_rgba(248,113,113,0.5)]' : 'text-on-surface-variant hover:text-critical'}`}
           >
             Critical
           </button>
           <button 
             onClick={() => setFilter('WARNING')}
-            className={`px-4 py-1.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${filter === 'WARNING' ? 'bg-[#ffaa00] text-[#06080c] shadow-[0_0_15px_rgba(255,170,0,0.5)]' : 'text-on-surface-variant hover:text-[#ffaa00]'}`}
+            className={`px-4 py-1.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider transition-all duration-300 ${filter === 'WARNING' ? 'bg-warning text-background shadow-[0_0_15px_rgba(251,191,36,0.5)]' : 'text-on-surface-variant hover:text-warning'}`}
           >
             Warning
           </button>
         </div>
       </div>
 
-      <div className="glass-premium rounded-2xl flex-1 flex flex-col shadow-[inset_0_0_20px_rgba(255,255,255,0.02)] p-6 z-10 relative scan-line">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-on-surface flex items-center gap-2">
-            <span className="material-symbols-outlined text-secondary">history</span>
+      <Card variant="glass" padding="none" className="flex-1 flex flex-col z-10 relative mt-4 mx-2 md:mx-0">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-border-subtle bg-surface-solid">
+          <h2 className="text-base md:text-lg font-semibold text-on-surface flex items-center gap-2">
+            <span className="material-symbols-outlined text-insight">history</span>
             Incident Log
           </h2>
-          <span className="px-3 py-1 bg-white/5 border border-white/10 rounded text-xs font-mono text-primary flex items-center gap-2 shadow-[0_0_15px_rgba(0,218,243,0.15)]">
-            <span className="material-symbols-outlined text-[14px] animate-spin-slow">sync</span> LIVE STREAMING
-          </span>
+          <Badge variant="nominal" text="LIVE STREAMING" />
         </div>
 
-        {isLoading ? (
-          <div className="flex-1 flex items-center justify-center text-on-surface-variant font-mono">
-            <span className="material-symbols-outlined animate-spin mr-2">progress_activity</span> Fetching AI Analytics...
-          </div>
-        ) : (
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar flex-1"
-          >
-            <AnimatePresence>
-              {filteredAlerts.length === 0 && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mt-10 font-mono text-on-surface-variant">
-                  No alerts match the current filter.
-                </motion.div>
-              )}
-              {filteredAlerts.map((alert) => {
-                const styles = getAlertStyles(alert.type);
-                return (
-                  <motion.div 
-                    key={alert.id}
-                    layout
-                    initial={{ opacity: 0, x: -20, scale: 0.95 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                    className={`p-5 rounded-xl border transition-colors group cursor-pointer relative overflow-hidden shadow-lg ${styles.bg}`}
-                  >
-                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${styles.line}`}></div>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between pl-3 gap-2">
-                      <div className="flex items-center gap-3">
-                        <span className={`material-symbols-outlined text-[24px] ${styles.text}`}>{styles.icon}</span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs font-mono font-bold tracking-widest uppercase ${styles.text}`}>{alert.type}</span>
-                            <span className="text-[10px] font-mono text-on-surface-variant bg-white/5 px-2 py-0.5 rounded border border-white/5">TAG: {alert.tag}</span>
-                          </div>
-                          <p className="text-sm text-on-surface mt-1 leading-relaxed font-medium">{alert.message}</p>
+        <div className="flex flex-col p-4 gap-4 overflow-y-auto custom-scrollbar flex-1 bg-background/20">
+          <AnimatePresence>
+            {filteredAlerts.length === 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mt-10 font-mono text-on-surface-variant">
+                No alerts match the current filter.
+              </motion.div>
+            )}
+            {filteredAlerts.map((alert) => {
+              const isCritical = alert.type === 'CRITICAL';
+              const isWarning = alert.type === 'WARNING';
+              
+              const borderClass = isCritical ? 'border-critical/30 hover:border-critical/60' : isWarning ? 'border-warning/30 hover:border-warning/60' : 'border-border-strong hover:border-primary/50';
+              const bgClass = isCritical ? 'bg-critical/5' : isWarning ? 'bg-warning/5' : 'bg-surface-solid';
+              const iconColor = isCritical ? 'text-critical' : isWarning ? 'text-warning' : 'text-primary';
+              const iconName = isCritical ? 'warning' : isWarning ? 'notifications_active' : 'info';
+              
+              return (
+                <motion.div 
+                  key={alert.id}
+                  layout
+                  initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className={`p-4 md:p-6 rounded-2xl border transition-all duration-300 group relative overflow-hidden shadow-sm hover:shadow-md ${bgClass} ${borderClass}`}
+                >
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 md:w-1.5 ${isCritical ? 'bg-critical shadow-[0_0_15px_rgba(248,113,113,0.8)]' : isWarning ? 'bg-warning shadow-[0_0_10px_rgba(251,191,36,0.8)]' : 'bg-primary'}`}></div>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between pl-3 gap-4">
+                    <div className="flex items-start gap-3 md:gap-4 w-full md:w-auto">
+                      <span className={`material-symbols-outlined text-[24px] md:text-[28px] shrink-0 ${iconColor}`}>{iconName}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <Badge variant={isCritical ? 'critical' : isWarning ? 'warning' : 'neutral'} text={alert.type} />
+                          <span className="text-[10px] font-mono text-on-surface-variant bg-surface-solid px-2 py-0.5 rounded border border-border-strong">
+                            TAG: {alert.tag}
+                          </span>
                         </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end md:items-end">
-                        <span className="text-xs font-mono text-on-surface-variant mb-1">{alert.time}</span>
-                        <button className="premium-btn px-3 py-1 text-[10px] font-mono text-primary uppercase tracking-wider rounded flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          Inspect <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                        </button>
+                        <p className="text-sm text-on-surface mt-2 leading-relaxed font-medium">{alert.message}</p>
                       </div>
                     </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </div>
+                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between h-full gap-3 mt-2 md:mt-0 pt-3 md:pt-0 border-t border-border-subtle md:border-none w-full md:w-auto">
+                      <span className="text-xs font-mono text-on-surface-variant">{alert.time}</span>
+                      <Link href={`/machine-detail?id=${alert.tag}`}>
+                        <Button variant="ghost" size="sm" className="font-mono uppercase tracking-wider text-[10px] font-bold text-primary gap-1 px-3 bg-primary/10 hover:bg-primary/20 md:bg-transparent md:px-3 md:hover:bg-on-surface/5 md:opacity-80 md:group-hover:opacity-100">
+                          Inspect <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      </Card>
     </main>
   );
 }
