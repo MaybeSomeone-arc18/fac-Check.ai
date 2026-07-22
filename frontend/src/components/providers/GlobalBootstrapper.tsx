@@ -19,16 +19,26 @@ export function GlobalBootstrapper({ children }: { children: React.ReactNode }) 
       // Connect socket immediately — non-blocking
       socketService.connect();
 
+      const fetchWithFallback = async (endpoint: string) => {
+        const primaryUrl = `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`;
+        const fallbackUrl = `${process.env.NEXT_PUBLIC_SOCKET_URL}/api${endpoint}`;
+
+        try {
+          const res = await fetch(primaryUrl);
+          if (!res.ok) throw new Error(`Primary API failed with ${res.status}`);
+          return await res.json();
+        } catch (e) {
+          console.warn(`[Bootstrap] Primary API ${primaryUrl} failed, trying fallback: ${fallbackUrl}`);
+          const fallbackRes = await fetch(fallbackUrl);
+          if (!fallbackRes.ok) throw new Error(`Fallback API failed with ${fallbackRes.status}`);
+          return await fallbackRes.json();
+        }
+      };
+
       // Fetch machines and alerts independently so one failure doesn't block the other
       const [machinesResult, alertsResult] = await Promise.allSettled([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/machines`).then(r => {
-          if (!r.ok) throw new Error(`/machines responded with ${r.status}`);
-          return r.json();
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/alerts`).then(r => {
-          if (!r.ok) throw new Error(`/alerts responded with ${r.status}`);
-          return r.json();
-        })
+        fetchWithFallback('/machines'),
+        fetchWithFallback('/alerts')
       ]);
 
       if (machinesResult.status === 'fulfilled') {
