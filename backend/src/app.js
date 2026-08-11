@@ -19,5 +19,8 @@ app.use('/api/predict', aiRoutes); // Expose the new AI endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date() });
 });
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date() });
+});
 
 module.exports = app;

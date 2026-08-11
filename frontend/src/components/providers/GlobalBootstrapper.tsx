@@ -16,7 +16,20 @@ export function GlobalBootstrapper({ children }: { children: React.ReactNode }) 
     hasInitialized.current = true;
 
     const initializeApp = async () => {
-      // Connect socket immediately — non-blocking
+      // 1. Send lightweight request to backend /health endpoint to wake Render service
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const healthUrl = socketUrl 
+        ? `${socketUrl}/health` 
+        : (apiUrl ? `${apiUrl.replace(/\/api\/?$/, '')}/health` : '/health');
+
+      try {
+        await fetch(healthUrl, { method: 'GET', cache: 'no-store' });
+      } catch (e) {
+        console.warn('[Bootstrap] Health check wake-up ping failed or timed out:', e);
+      }
+
+      // 2. Only after backend is reachable/pinged, connect socket
       socketService.connect();
 
       const fetchWithFallback = async (endpoint: string) => {
