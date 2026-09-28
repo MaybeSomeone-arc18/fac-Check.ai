@@ -234,7 +234,7 @@ export default function Analytics() {
       <div className="flex flex-col md:flex-row justify-between items-end gap-4 animate-fade-in mb-4 relative z-30">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-on-surface">Global Fleet Analytics</h2>
-          <p className="text-sm font-mono text-on-surface-variant mt-2 tracking-wider">Aggregated performance and historical predictive trends.</p>
+          <p className="text-sm font-mono text-on-surface-variant mt-2 tracking-wider">Simulation only: chart history and fleet KPIs below are generated in the browser, not measured OEE or model validation.</p>
         </div>
         
         <div className="relative" ref={timeframeRef}>
@@ -276,40 +276,40 @@ export default function Analytics() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 relative z-10">
         <MetricCard 
-          label="Fleet OEE"
+          label="Simulated Fleet OEE"
           value={metrics.oee.toFixed(1)}
           unit="%"
           trend="up"
-          trendValue="+2.4% vs prev"
+          trendValue="Demo value"
           icon="analytics"
           isLoading={isLoading}
         />
         <MetricCard 
-          label="Yield Variance"
+          label="Simulated Yield Variance"
           value={metrics.yield.toFixed(1)}
           unit="%"
           trend="down"
-          trendValue="-0.8% vs prev"
+          trendValue="Demo value"
           icon="precision_manufacturing"
           iconColor="text-warning"
           isLoading={isLoading}
         />
         <MetricCard 
-          label="Unplanned Downtime"
+          label="Simulated Downtime"
           value={metrics.downtime.toFixed(1)}
           unit="hrs"
           trend="down"
-          trendValue="Action Required"
+          trendValue="Demo value"
           icon="schedule"
           iconColor="text-critical"
           isLoading={isLoading}
         />
         <MetricCard 
-          label="Quality Score"
+          label="Simulated Quality Score"
           value={metrics.quality.toFixed(1)}
           unit="%"
           trend="neutral"
-          trendValue="Steady trend"
+          trendValue="Demo value"
           icon="verified"
           iconColor="text-insight"
           isLoading={isLoading}
@@ -322,7 +322,7 @@ export default function Analytics() {
             <div className="p-2 bg-surface-solid rounded-lg border border-border-strong hidden sm:block">
               <span className="material-symbols-outlined text-primary text-[20px]">monitoring</span>
             </div>
-            <h3 className="text-xs sm:text-sm font-bold text-on-surface uppercase tracking-wider">Overall Equipment Effectiveness (OEE) Trend</h3>
+            <h3 className="text-xs sm:text-sm font-bold text-on-surface uppercase tracking-wider">Simulated OEE Trend</h3>
           </div>
           <div className="flex items-center gap-4 sm:gap-6 self-end sm:self-auto">
             <div className="flex items-center gap-2">
