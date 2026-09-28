@@ -57,7 +57,7 @@
 
 ## 🔭 Overview
 
-**FacCheck AI** is a full-stack, AI-driven predictive maintenance platform engineered to monitor, analyze, and visualize industrial machine health. By combining a realistic simulation of high-frequency sensor telemetry with machine learning, the platform accurately predicts failure probabilities before they cause downtime.
+**FacCheck AI** is a full-stack, AI-driven predictive maintenance platform engineered to monitor, analyze, and visualize industrial machine health. By combining a realistic simulation of high-frequency sensor telemetry with machine learning, the platform demonstrates a predictive-maintenance interface over a CSV replay. This is a prototype, not a validated failure-warning system; the analytics KPIs and history chart are randomly simulated in the browser.
 
 The system features a real-time WebSocket architecture that feeds live telemetry directly into a sleek, futuristic UI dashboard complete with interactive 3D digital twins.
 
@@ -243,9 +243,9 @@ While primary data flows via WebSockets, the backend also exposes standard REST 
 
 ## 🧠 AI Workflow & Features
 
-FacCheck AI seamlessly integrates a **Scikit-learn Random Forest Model** to elevate operations from passive tracking to proactive management.
+The backend trains a JavaScript `ml-random-forest` classifier on a capped, balanced subset of CSV rows. No held-out evaluation, calibration or field validation is reported. If training data is unavailable, the prediction fallback is random mock output. The UI analytics OEE/yield/downtime/quality values are simulated, not outputs of that classifier.
 
-- **Risk Classification:** Evaluates 10-dimensional sensor feature vectors to predict failure probabilities.
+- **Risk Classification:** Evaluates nine CSV metric features to produce prototype failure scores. These are not calibrated probabilities.
 - **Categorization:** Classifies incoming live streams into statuses: NOMINAL, WARNING, and CRITICAL.
 - **Automated Alerts:** When anomaly thresholds are breached, the AI triggers immediate visual alerts on the dashboard and event logs.
 - **Digital Twin Sync:** Risk levels are actively bound to the React Three Fiber materials, turning a healthy blue model into a glowing red model dynamically.
